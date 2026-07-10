@@ -1,0 +1,4 @@
+estado_cuenta,duracion,historial_credito,proposito,monto_credito,cuenta_ahorro,empleo,tasa_cuota,estado_personal,otros_deudores,residencia,propiedad,edad,otros_planes,vivienda,creditos_existentes,trabajo,personas_cargo,telefono,trabajador_extranjero
+A14,12,A32,A43,2500,A61,A73,2,A93,A101,2,A121,35,A143,A152,1,A173,1,A191,A201
+A11,36,A34,A40,6500,A62,A72,4,A92,A101,4,A124,28,A143,A152,2,A172,2,A192,A201
+A12,24,A31,A41,4200,A65,A74,3,A93,A103,3,A122,45,A141,A153,1,A174,1,A191,A202
