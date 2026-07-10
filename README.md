@@ -32,9 +32,12 @@ El notebook de Colab revisado sigue este flujo:
 |-- modelo_crediticio.pkl
 |-- columnas_modelo.pkl
 |-- requirements.txt
+|-- notebooks/
+|   `-- AE_Proyecto.ipynb
 |-- data/
 |   `-- plantilla_clientes.csv
 |-- docs/
+|   |-- Proyecto_Aprendizaje_Estadistico.pdf
 |   |-- diccionario_datos.md
 |   `-- revision_coherencia.md
 `-- results/
@@ -70,6 +73,5 @@ Ver `results/metricas_modelo.md` para el resumen y las brechas detectadas frente
 
 ## Pendientes academicos recomendados
 
-- Versionar el notebook `AE_Proyecto.ipynb` dentro de una carpeta `notebooks/`.
 - Guardar un pipeline completo con codificadores + modelo para reproducibilidad total.
 - Agregar evidencia reproducible de Regresion Logistica y LogitBoost si el informe mantiene la comparacion de tres modelos.

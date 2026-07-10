@@ -15,13 +15,13 @@ El informe indicaba que el repositorio incluia README completo, notebook, carpet
 - Se completo la app de Streamlit con prediccion manual real.
 - Se agrego validacion estricta de columnas para CSV.
 - Se agrego plantilla compatible con el modelo.
+- Se agrego el notebook de entrenamiento en `notebooks/AE_Proyecto.ipynb`.
+- Se agrego el informe PDF en `docs/Proyecto_Aprendizaje_Estadistico.pdf`.
 - Se agrego diccionario de datos.
 - Se agrego archivo de metricas y brecha metodologica.
 - Se actualizo la documentacion para reflejar el pipeline observado en Colab.
 
 ## Pendientes recomendados
 
-- Versionar el notebook `AE_Proyecto.ipynb` dentro de `notebooks/`.
 - Guardar un pipeline completo de preprocesamiento + modelo.
 - Agregar evidencia reproducible de Regresion Logistica y LogitBoost si el informe mantiene esa comparacion.
-- Publicar el informe PDF dentro de `docs/` si el repositorio debe cumplir literalmente lo descrito en el documento.
