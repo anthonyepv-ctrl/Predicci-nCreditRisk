@@ -409,21 +409,15 @@ st.markdown(
         margin: 0;
         max-width: 860px;
     }
-    .quick-card {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 14px 16px;
-        min-height: 88px;
+    div[data-testid="stButton"] > button[kind="primary"] {
+        background: var(--accent) !important;
+        border: 1px solid var(--accent-dark) !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
     }
-    .quick-card strong {
-        display: block;
-        color: var(--ink);
-        margin-bottom: 4px;
-    }
-    .quick-card span {
-        color: var(--muted);
-        font-size: 0.92rem;
+    div[data-testid="stButton"] > button[kind="primary"] p,
+    div[data-testid="stButton"] > button[kind="primary"] span {
+        color: #ffffff !important;
     }
     [data-testid="stMetric"] {
         background: #ffffff;
@@ -512,21 +506,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-info_a, info_b, info_c = st.columns(3)
-info_a.markdown(
-    '<div class="quick-card"><strong>CSV de prueba</strong><span>Descarga clientes_1000.csv desde la barra lateral.</span></div>',
-    unsafe_allow_html=True,
-)
-info_b.markdown(
-    '<div class="quick-card"><strong>Entrada manual clara</strong><span>Los codigos A11, A73 o A201 muestran su significado.</span></div>',
-    unsafe_allow_html=True,
-)
-info_c.markdown(
-    '<div class="quick-card"><strong>Lectura ejecutiva</strong><span>Metricas, riesgo y comparativa visual en una sola vista.</span></div>',
-    unsafe_allow_html=True,
-)
-st.write("")
-
 try:
     modelo, columnas = load_artifacts()
 except Exception as exc:
@@ -553,13 +532,9 @@ with tab_csv:
     else:
         try:
             uploaded_df = pd.read_csv(archivo)
-            st.subheader("Vista previa")
-            st.caption(f"{len(uploaded_df):,} filas cargadas. Se muestran las primeras 20 para revisar formato.")
-            st.dataframe(uploaded_df.head(20), use_container_width=True)
-
             result_df = classify(uploaded_df, modelo, columnas)
             st.subheader("Resultados")
-            st.caption("Vista previa de resultados. Descarga el CSV para revisar toda la cartera.")
+            st.caption(f"{len(uploaded_df):,} filas procesadas. Se muestran las primeras 50 y puedes descargar el resultado completo.")
             st.dataframe(result_df.head(50), use_container_width=True)
             st.download_button(
                 "Descargar resultados completos",
