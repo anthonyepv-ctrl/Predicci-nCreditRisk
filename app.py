@@ -195,6 +195,7 @@ def render_summary(result: pd.DataFrame):
     morosos = int((result["Prediccion"] == "MOROSO").sum())
     no_morosos = total - morosos
     risk_counts = result["Nivel de riesgo"].value_counts().reindex(["Bajo", "Medio", "Alto"], fill_value=0)
+    class_counts = result["Prediccion"].value_counts().reindex(["NO MOROSO", "MOROSO"], fill_value=0)
 
     metric_cols = st.columns(4)
     metric_cols[0].metric("Total clientes", total)
@@ -202,10 +203,15 @@ def render_summary(result: pd.DataFrame):
     metric_cols[2].metric("Morosos", morosos)
     metric_cols[3].metric("% morosos", f"{morosos / total:.1%}" if total else "0.0%")
 
-    st.subheader("Distribucion de riesgo")
-    st.bar_chart(risk_counts)
+    chart_left, chart_right = st.columns([1, 1])
+    with chart_left:
+        st.subheader("Distribucion por riesgo")
+        st.bar_chart(risk_counts, color="#2563eb")
+    with chart_right:
+        st.subheader("Comparativa de decision")
+        st.bar_chart(class_counts, color="#0f766e")
 
-    st.subheader("Comparativa")
+    st.subheader("Resumen comparativo")
     risk_table = pd.DataFrame(
         {
             "Nivel": risk_counts.index,
@@ -271,26 +277,107 @@ def manual_form(expected_columns: list[str]) -> pd.DataFrame:
     return pd.DataFrame([values], columns=expected_columns)
 
 
-st.set_page_config(page_title="Clasificador de Riesgo Crediticio", page_icon=":credit_card:")
+st.set_page_config(
+    page_title="Clasificador de Riesgo Crediticio",
+    page_icon=":credit_card:",
+    layout="wide",
+)
 st.markdown(
     """
     <style>
-    .stApp { background: #f7fafc; }
+    :root {
+        --ink: #172033;
+        --muted: #667085;
+        --line: #d9e2ec;
+        --panel: #ffffff;
+        --accent: #2563eb;
+    }
+    .stApp {
+        background: #eef3f8;
+        color: var(--ink);
+    }
+    .block-container {
+        max-width: 1180px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+    h1, h2, h3, h4, h5, h6, p, label, span, div {
+        color: var(--ink);
+    }
+    [data-testid="stMarkdownContainer"] p {
+        color: var(--muted);
+    }
+    .hero {
+        background: linear-gradient(135deg, #123a6f 0%, #0f766e 100%);
+        border-radius: 8px;
+        padding: 24px 28px;
+        margin-bottom: 18px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+    }
+    .hero h1 {
+        color: #ffffff !important;
+        margin: 0 0 8px 0;
+        font-size: 2.1rem;
+        line-height: 1.15;
+    }
+    .hero p {
+        color: #e6f0ff !important;
+        margin: 0;
+        max-width: 860px;
+    }
+    .quick-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        min-height: 88px;
+    }
+    .quick-card strong {
+        display: block;
+        color: var(--ink);
+        margin-bottom: 4px;
+    }
+    .quick-card span {
+        color: var(--muted);
+        font-size: 0.92rem;
+    }
     [data-testid="stMetric"] {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--line);
         border-radius: 8px;
         padding: 14px 16px;
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
     }
+    [data-testid="stMetricLabel"] p,
+    [data-testid="stMetricValue"] {
+        color: var(--ink) !important;
+    }
     div[data-testid="stDataFrame"] {
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--line);
         border-radius: 8px;
         overflow: hidden;
     }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 6px;
+        background: transparent;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px 8px 0 0;
+        padding: 10px 14px;
+    }
+    .stTabs [aria-selected="true"] {
+        border-color: var(--accent);
+        color: var(--accent) !important;
+    }
+    section[data-testid="stSidebar"] {
+        background: #ffffff;
+        border-right: 1px solid var(--line);
+    }
     .risk-card {
         background: #ffffff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--line);
         border-left: 6px solid var(--risk-color);
         border-radius: 8px;
         padding: 16px;
@@ -301,8 +388,30 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-st.title("Sistema de Evaluacion de Riesgo Crediticio")
-st.caption("Dataset German Credit | Modelo Random Forest + SMOTE | Despliegue en Streamlit")
+st.markdown(
+    """
+    <div class="hero">
+        <h1>Sistema de Evaluacion de Riesgo Crediticio</h1>
+        <p>Clasificacion de clientes con German Credit, Random Forest y SMOTE. Sube una cartera CSV, revisa metricas comparativas o simula un solicitante manualmente.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+info_a, info_b, info_c = st.columns(3)
+info_a.markdown(
+    '<div class="quick-card"><strong>CSV de prueba</strong><span>Descarga clientes_1000.csv desde la barra lateral.</span></div>',
+    unsafe_allow_html=True,
+)
+info_b.markdown(
+    '<div class="quick-card"><strong>Entrada manual clara</strong><span>Los codigos A11, A73 o A201 muestran su significado.</span></div>',
+    unsafe_allow_html=True,
+)
+info_c.markdown(
+    '<div class="quick-card"><strong>Lectura ejecutiva</strong><span>Metricas, riesgo y comparativa visual en una sola vista.</span></div>',
+    unsafe_allow_html=True,
+)
+st.write("")
 
 try:
     modelo, columnas = load_artifacts()
