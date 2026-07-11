@@ -190,6 +190,28 @@ def render_code_guide():
     st.dataframe(pd.DataFrame(guide_rows), use_container_width=True, hide_index=True)
 
 
+def render_bar_group(title: str, values: pd.Series, colors: dict[str, str]):
+    st.subheader(title)
+    total = int(values.sum())
+    for label, value in values.items():
+        percent = (int(value) / total) if total else 0
+        color = colors.get(str(label), "#2563eb")
+        st.markdown(
+            f"""
+            <div class="bar-row">
+                <div class="bar-label">
+                    <strong>{label}</strong>
+                    <span>{int(value)} ({percent:.1%})</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width: {percent * 100:.1f}%; background: {color};"></div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
 def render_summary(result: pd.DataFrame):
     total = len(result)
     morosos = int((result["Prediccion"] == "MOROSO").sum())
@@ -205,11 +227,17 @@ def render_summary(result: pd.DataFrame):
 
     chart_left, chart_right = st.columns([1, 1])
     with chart_left:
-        st.subheader("Distribucion por riesgo")
-        st.bar_chart(risk_counts, color="#2563eb")
+        render_bar_group(
+            "Distribucion por riesgo",
+            risk_counts,
+            {"Bajo": "#16a34a", "Medio": "#d97706", "Alto": "#dc2626"},
+        )
     with chart_right:
-        st.subheader("Comparativa de decision")
-        st.bar_chart(class_counts, color="#0f766e")
+        render_bar_group(
+            "Comparativa de decision",
+            class_counts,
+            {"NO MOROSO": "#0f766e", "MOROSO": "#dc2626"},
+        )
 
     st.subheader("Resumen comparativo")
     risk_table = pd.DataFrame(
@@ -384,6 +412,36 @@ st.markdown(
         margin: 8px 0 16px;
     }
     .risk-card strong { color: #1a202c; }
+    .bar-row {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin: 10px 0;
+    }
+    .bar-label {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--ink);
+        font-size: 0.94rem;
+        margin-bottom: 8px;
+    }
+    .bar-label span {
+        color: var(--muted);
+        white-space: nowrap;
+    }
+    .bar-track {
+        height: 12px;
+        background: #e6edf5;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+    .bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        min-width: 3px;
+    }
     </style>
     """,
     unsafe_allow_html=True,
