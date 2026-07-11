@@ -29,6 +29,11 @@ EXPECTED_COLUMNS = [
     "trabajador_extranjero",
 ]
 
+COLUMN_ALIASES = {
+    "residencia": "residencia_actual",
+    "personas_cargo": "personas_mantenimiento",
+}
+
 CATEGORICAL_VALUES = {
     "estado_cuenta": ["A11", "A12", "A13", "A14"],
     "historial_credito": ["A30", "A31", "A32", "A33", "A34"],
@@ -154,6 +159,7 @@ def label_encode_like_training(df: pd.DataFrame) -> pd.DataFrame:
 def prepare_input(df: pd.DataFrame, expected_columns: list[str]) -> pd.DataFrame:
     df = df.copy()
     df.columns = [str(col).strip() for col in df.columns]
+    df = df.rename(columns=COLUMN_ALIASES)
 
     missing = [column for column in expected_columns if column not in df.columns]
     extra = [column for column in df.columns if column not in expected_columns]
@@ -211,6 +217,7 @@ def score_credit_risk(df: pd.DataFrame) -> pd.Series:
 def classify(df: pd.DataFrame, model, expected_columns: list[str]) -> pd.DataFrame:
     normalized_df = df.copy()
     normalized_df.columns = [str(col).strip() for col in normalized_df.columns]
+    normalized_df = normalized_df.rename(columns=COLUMN_ALIASES)
     prepare_input(normalized_df, expected_columns)
     probabilities = score_credit_risk(normalized_df[expected_columns])
     predictions = (probabilities >= 0.50).astype(int)
