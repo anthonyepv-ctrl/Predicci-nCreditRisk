@@ -1,4 +1,10 @@
 from pathlib import Path
+import os
+
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+os.environ.setdefault("MKL_NUM_THREADS", "1")
+os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
 
 import joblib
 import pandas as pd
@@ -112,6 +118,8 @@ FIELD_HELP = {
 @st.cache_resource
 def load_artifacts():
     model = joblib.load(MODEL_PATH)
+    if hasattr(model, "set_params") and "n_jobs" in model.get_params():
+        model.set_params(n_jobs=1)
     columns = joblib.load(COLUMNS_PATH)
     return model, list(columns)
 
@@ -498,11 +506,19 @@ with tab_csv:
         try:
             uploaded_df = pd.read_csv(archivo)
             st.subheader("Vista previa")
-            st.dataframe(uploaded_df.head(), use_container_width=True)
+            st.caption(f"{len(uploaded_df):,} filas cargadas. Se muestran las primeras 20 para revisar formato.")
+            st.dataframe(uploaded_df.head(20), use_container_width=True)
 
             result_df = classify(uploaded_df, modelo, columnas)
             st.subheader("Resultados")
-            st.dataframe(result_df, use_container_width=True)
+            st.caption("Vista previa de resultados. Descarga el CSV para revisar toda la cartera.")
+            st.dataframe(result_df.head(50), use_container_width=True)
+            st.download_button(
+                "Descargar resultados completos",
+                data=result_df.to_csv(index=False).encode("utf-8"),
+                file_name="resultados_riesgo_crediticio.csv",
+                mime="text/csv",
+            )
             render_summary(result_df)
         except Exception as exc:
             st.error(f"No se pudo procesar el CSV: {exc}")
