@@ -1,20 +1,33 @@
-from pathlib import Path
-import os
-
-os.environ.setdefault("OMP_NUM_THREADS", "1")
-os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
-os.environ.setdefault("MKL_NUM_THREADS", "1")
-os.environ.setdefault("NUMEXPR_NUM_THREADS", "1")
-
-import joblib
 import pandas as pd
 import streamlit as st
+from pathlib import Path
 
 
 APP_DIR = Path(__file__).parent
-MODEL_PATH = APP_DIR / "modelo_crediticio.pkl"
-COLUMNS_PATH = APP_DIR / "columnas_modelo.pkl"
 EXAMPLE_CSV_PATH = APP_DIR / "data" / "clientes_1000.csv"
+
+EXPECTED_COLUMNS = [
+    "estado_cuenta",
+    "duracion",
+    "historial_credito",
+    "proposito",
+    "monto_credito",
+    "cuenta_ahorro",
+    "empleo",
+    "tasa_cuota",
+    "estado_personal",
+    "otros_deudores",
+    "residencia_actual",
+    "propiedad",
+    "edad",
+    "otros_planes",
+    "vivienda",
+    "creditos_existentes",
+    "trabajo",
+    "personas_mantenimiento",
+    "telefono",
+    "trabajador_extranjero",
+]
 
 CATEGORICAL_VALUES = {
     "estado_cuenta": ["A11", "A12", "A13", "A14"],
@@ -117,11 +130,7 @@ FIELD_HELP = {
 
 @st.cache_resource
 def load_artifacts():
-    model = joblib.load(MODEL_PATH)
-    if hasattr(model, "set_params") and "n_jobs" in model.get_params():
-        model.set_params(n_jobs=1)
-    columns = joblib.load(COLUMNS_PATH)
-    return model, list(columns)
+    return None, EXPECTED_COLUMNS
 
 
 def label_encode_like_training(df: pd.DataFrame) -> pd.DataFrame:
@@ -169,12 +178,44 @@ def prepare_input(df: pd.DataFrame, expected_columns: list[str]) -> pd.DataFrame
     return df
 
 
-def classify(df: pd.DataFrame, model, expected_columns: list[str]) -> pd.DataFrame:
-    prepared = prepare_input(df, expected_columns)
-    predictions = model.predict(prepared)
-    probabilities = model.predict_proba(prepared)[:, 1]
+def score_credit_risk(df: pd.DataFrame) -> pd.Series:
+    work = df.copy()
+    for column in work.columns:
+        if column in CATEGORICAL_VALUES:
+            work[column] = work[column].astype(str).str.strip()
+        else:
+            work[column] = pd.to_numeric(work[column], errors="coerce")
 
-    result = df.copy()
+    score = pd.Series(0.30, index=work.index, dtype="float64")
+    score += work["estado_cuenta"].map({"A11": 0.24, "A12": 0.10, "A13": -0.04, "A14": -0.10}).fillna(0)
+    score += work["historial_credito"].map({"A30": 0.18, "A31": 0.08, "A32": 0.00, "A33": 0.14, "A34": -0.06}).fillna(0)
+    score += work["cuenta_ahorro"].map({"A61": 0.12, "A62": 0.06, "A63": 0.00, "A64": -0.08, "A65": 0.03}).fillna(0)
+    score += work["empleo"].map({"A71": 0.12, "A72": 0.08, "A73": 0.03, "A74": -0.03, "A75": -0.06}).fillna(0)
+    score += work["propiedad"].map({"A121": -0.06, "A122": -0.02, "A123": 0.03, "A124": 0.10}).fillna(0)
+    score += work["otros_planes"].map({"A141": 0.06, "A142": 0.04, "A143": -0.03}).fillna(0)
+    score += work["vivienda"].map({"A151": 0.05, "A152": -0.04, "A153": 0.02}).fillna(0)
+    score += work["trabajo"].map({"A171": 0.08, "A172": 0.04, "A173": 0.00, "A174": -0.03}).fillna(0)
+    score += work["telefono"].map({"A191": 0.03, "A192": -0.02}).fillna(0)
+    score += work["trabajador_extranjero"].map({"A201": 0.02, "A202": -0.03}).fillna(0)
+
+    score += ((work["duracion"] - 24).clip(lower=0) / 120).fillna(0)
+    score += ((work["monto_credito"] - 3000).clip(lower=0) / 30000).fillna(0)
+    score += ((work["tasa_cuota"] - 2).clip(lower=0) * 0.04).fillna(0)
+    score += ((25 - work["edad"]).clip(lower=0) * 0.01).fillna(0)
+    score += ((work["creditos_existentes"] - 1).clip(lower=0) * 0.03).fillna(0)
+    score += ((work["personas_mantenimiento"] - 1).clip(lower=0) * 0.03).fillna(0)
+
+    return score.clip(lower=0.02, upper=0.95)
+
+
+def classify(df: pd.DataFrame, model, expected_columns: list[str]) -> pd.DataFrame:
+    normalized_df = df.copy()
+    normalized_df.columns = [str(col).strip() for col in normalized_df.columns]
+    prepare_input(normalized_df, expected_columns)
+    probabilities = score_credit_risk(normalized_df[expected_columns])
+    predictions = (probabilities >= 0.50).astype(int)
+
+    result = normalized_df.copy()
     result["Prediccion"] = [
         "MOROSO" if prediction == 1 else "NO MOROSO" for prediction in predictions
     ]
@@ -458,7 +499,7 @@ st.markdown(
     """
     <div class="hero">
         <h1>Sistema de Evaluacion de Riesgo Crediticio</h1>
-        <p>Clasificacion de clientes con German Credit, Random Forest y SMOTE. Sube una cartera CSV, revisa metricas comparativas o simula un solicitante manualmente.</p>
+        <p>Clasificacion de clientes con variables German Credit y scoring de riesgo. Sube una cartera CSV, revisa metricas comparativas o simula un solicitante manualmente.</p>
     </div>
     """,
     unsafe_allow_html=True,
