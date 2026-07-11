@@ -35,9 +35,11 @@ El notebook de Colab revisado sigue este flujo:
 |-- notebooks/
 |   `-- AE_Proyecto.ipynb
 |-- data/
+|   |-- clientes_1000.csv
 |   `-- plantilla_clientes.csv
 |-- docs/
 |   |-- Proyecto_Aprendizaje_Estadistico.pdf
+|   |-- codigos_german_credit.md
 |   |-- diccionario_datos.md
 |   `-- revision_coherencia.md
 `-- results/
@@ -55,8 +57,9 @@ streamlit run app.py
 
 La aplicacion permite dos flujos:
 
-- **Prediccion por CSV:** subir un archivo con las 20 columnas del modelo. Se puede descargar una plantilla desde la barra lateral.
-- **Prediccion manual:** ingresar los valores de un solicitante y clasificarlo directamente desde la interfaz.
+- **Prediccion por CSV:** subir un archivo con las 20 columnas del modelo. Se puede descargar `clientes_1000.csv` desde la barra lateral.
+- **Prediccion manual:** ingresar los valores de un solicitante y clasificarlo directamente desde la interfaz. Los selectores muestran el codigo y su significado.
+- **Guia de codigos:** consultar el significado de valores como `A11`, `A73` o `A201` desde la app y desde `docs/codigos_german_credit.md`.
 
 La app valida que no falten columnas obligatorias y rechaza codigos categoricos desconocidos para evitar predicciones con datos mal codificados.
 
